@@ -95,12 +95,12 @@ This DocType lists and organizes draft Mpesa payments, making it possible to rec
 2. Clone this repository into your Frappe bench apps directory.
 
  ``` 
- bench get-app https://github.com/navariltd/frappe-mpsa-payments.git
+ bench get-app https://github.com/Simoh8/mpesa-dev.git
  ```
 
  3. Install the app into your site
  ``` 
- bench --site [your-site-name] install-app frappe_mpsa_payments
+ bench --site [your-site-name] install-app xxxxxxxx
  ```
  4. Configure the "Mpesa Settings" doctype with appropriate values.
 
