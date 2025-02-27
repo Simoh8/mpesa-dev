@@ -339,43 +339,82 @@ def get_completed_integration_requests_info(
     return mpesa_receipts, completed_payments
 
 
+from frappe import _
+import frappe
+from frappe.utils import get_request_site_address
+
 def get_account_balance(request_payload: dict) -> str | dict | None:
-    """Call account balance API to send the request to the Mpesa Servers."""
+    """Call account balance API to send the request to the M-Pesa Servers.
+
+    Args:
+        request_payload (dict): A dictionary containing the reference document name and other details.
+
+    Returns:
+        str | dict | None: The response from the M-Pesa API, or None if an error occurs.
+
+    Raises:
+        frappe.ValidationError: If the M-Pesa settings are invalid or missing.
+        Exception: If any other error occurs during the API call.
+    """
     try:
+        # Fetch M-Pesa settings
         mpesa_settings = frappe.get_doc(
             "Mpesa Settings", request_payload.get("reference_docname")
         )
-        env = "production" if not mpesa_settings.sand# No code was selected, so we will generate a new function to improve the existing code
-def improve_code():
-    # This function will contain the improved code
-    passbox else "sandbox"
+
+        # Determine environment (production or sandbox)
+        env = "production" if not mpesa_settings.sandbox else "sandbox"
+
+        # Initialize MpesaConnector
         connector = MpesaConnector(
             env=env,
             app_key=mpesa_settings.consumer_key,
             app_secret=mpesa_settings.get_password("consumer_secret"),
         )
 
+        # Construct callback URL
         callback_url = (
             get_request_site_address(True)
             + "/api/method/payments.payment_gateways.doctype.mpesa_settings.mpesa_settings.process_balance_info"
         )
 
+        # Make API call to get account balance
         response = connector.get_balance(
-            mpesa_settings.initiator_name,
-            mpesa_settings.security_credential,
-            mpesa_settings.till_number,
-            4,
-            mpesa_settings.name,
-            callback_url,
-            callback_url,
-        )
-        return response
-    except Exception:
-        frappe.log_error("Mpesa: Failed to get account balance")
-        frappe.throw(
-            _("Please check your configuration and try again"), title=_("Error")
+            initiator=mpesa_settings.initiator_name,
+            security_credential=mpesa_settings.security_credential,
+            party_a=mpesa_settings.till_number,
+            identifier_type=4,  # 4 represents Till Number
+            remarks=f"Balance check for {mpesa_settings.name}",
+            queue_timeout_url=callback_url,
+            result_url=callback_url,
         )
 
+        # Log the response for debugging
+        frappe.logger().info(f"M-Pesa Account Balance Response: {response}")
+
+        return response
+
+    except frappe.DoesNotExistError:
+        # Handle missing M-Pesa settings
+        frappe.log_error(
+            title=_("M-Pesa Settings Not Found"),
+            message=f"M-Pesa Settings document not found for reference: {request_payload.get('reference_docname')}",
+        )
+        frappe.throw(
+            _("M-Pesa Settings not found. Please check your configuration."),
+            title=_("Configuration Error"),
+        )
+
+    except Exception as e:
+        # Log the error and re-raise with a user-friendly message
+        frappe.log_error(
+            title=_("M-Pesa Account Balance Error"),
+            message=frappe.get_traceback(),
+        )
+        frappe.throw(
+            _("An error occurred while fetching the account balance: {0}").format(str(e)),
+            title=_("API Error"),
+        )
 
 @frappe.whitelist(allow_guest=True)
 def process_balance_info(**kwargs) -> None:
