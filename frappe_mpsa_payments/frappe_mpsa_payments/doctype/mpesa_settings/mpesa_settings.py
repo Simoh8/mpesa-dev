@@ -165,13 +165,6 @@ class MpesaSettings(Document):
             frappe.throw(_(response["errorMessage"]), title=_("Transaction Error"))
 
 
-
-
-
-from frappe import _
-import frappe
-from frappe.utils import get_request_site_address
-
 def generate_stk_push(**kwargs) -> str | Any:
     """Generate STK push by making an API call to the STK push API.
 
@@ -339,9 +332,6 @@ def get_completed_integration_requests_info(
     return mpesa_receipts, completed_payments
 
 
-from frappe import _
-import frappe
-from frappe.utils import get_request_site_address
 
 def get_account_balance(request_payload: dict) -> str | dict | None:
     """Call account balance API to send the request to the M-Pesa Servers.
