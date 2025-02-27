@@ -100,7 +100,7 @@ This DocType lists and organizes draft Mpesa payments, making it possible to rec
 
  3. Install the app into your site
  ``` 
- bench --site [your-site-name] install-app xxxxxxxx
+ bench --site [your-site-name] install-app frappe_mpsa_payments
  ```
  4. Configure the "Mpesa Settings" doctype with appropriate values.
 
